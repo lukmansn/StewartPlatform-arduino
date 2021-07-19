@@ -7,8 +7,8 @@ float sp = 0, pv = 0, integralE = 0, derivativeE = 0, consKp = 0, consKi = 0, co
 int syntaxError = 0;
 unsigned long previousMillis = 0;
 float outP = 0, outI = 0, outD = 0;
-float maxOut = radians(20);
-float minOut = radians(-20);
+float maxOut = radians(25);
+float minOut = radians(-25);
 long lastTimeTC = 0;
 float Tc = 0;
 int mode = 0;
@@ -25,8 +25,8 @@ float Tab_error[7] = {};      // 0 = NB_error, 1 = NM_error, 2 = NS_error, 3 = Z
 float Tab_derror[7] = {};     // 0 = NB_derror, 1 = NM_derror, 2 = NS_derror, 3 = ZO_derror, 4 = PS_derror, 5 = PM_derror, 6 = PB_derror;
 float ruletable[49]= {};      // Tabel Rule base
 
-float Emf[9]  = {radians(-50), radians(-45), radians(-30), radians(-15), radians(0), radians(15), radians(30), radians(45), radians(50)};  // member error  : -50, -45, -30, -15, 0, 15, 30, 45, 50
-float DEmf[9] = {radians(-15), radians(-10), radians(-5), radians(-3),radians(0), radians(3), radians(5), radians(10), radians(15)};       // member derror : -15, -10, -5, -3, 0, 3, 5, 10, 15
+float Emf[9]  = {radians(-20), radians(-15), radians(-10), radians(0), radians(10), radians(15), radians(20)};  // member error  : -50, -45, -30, -15, 0, 15, 30, 45, 50
+float DEmf[9] = {radians(-20), radians(-15), radians(-10), radians(0), radians(10), radians(15), radians(20)};       // member derror : -15, -10, -5, -3, 0, 3, 5, 10, 15
 
 float mf_error(float a, float b, float c)                     // mencari derajat keanggotaan membership function
 {
