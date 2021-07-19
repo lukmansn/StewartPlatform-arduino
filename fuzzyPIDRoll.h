@@ -240,7 +240,7 @@ void timesampling(int ts) {
 
 float fuzzyInput() {
   unsigned long counter = micros();
-  if(counter - previousMillis >= 100) {
+  if(counter - previousMillis >= 1000) {
   error  = sp - pv;
   if(error >= MAXerror){
     error = MAXerror;
