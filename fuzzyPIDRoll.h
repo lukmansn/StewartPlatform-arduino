@@ -25,8 +25,8 @@ float Tab_error[7] = {};      // 0 = NB_error, 1 = NM_error, 2 = NS_error, 3 = Z
 float Tab_derror[7] = {};     // 0 = NB_derror, 1 = NM_derror, 2 = NS_derror, 3 = ZO_derror, 4 = PS_derror, 5 = PM_derror, 6 = PB_derror;
 float ruletable[49]= {};      // Tabel Rule base
 
-float Emf[7]  = {radians(-20), radians(-15), radians(-10), radians(0), radians(10), radians(15), radians(20)};
-float DEmf[7] = {radians(-10), radians(-5), radians(-2), radians(0), radians(2), radians(5), radians(10)};
+float Emf[9]  = {radians(-25),radians(-20), radians(-15), radians(-10), radians(0), radians(10), radians(15), radians(20), radians(25)};
+float DEmf[9] = {radians(-15),radians(-10), radians(-5), radians(-2), radians(0), radians(2), radians(5), radians(10), radians(15)};
 
 float mf_error(float a, float b, float c)                     // mencari derajat keanggotaan membership function
 {
