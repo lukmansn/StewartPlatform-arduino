@@ -7,8 +7,8 @@ float sp = 0, pv = 0, integralE = 0, derivativeE = 0, consKp = 0, consKi = 0, co
 int syntaxError = 0;
 unsigned long previousMillis = 0;
 float outP = 0, outI = 0, outD = 0;
-float maxOut = radians(25);
-float minOut = radians(-25);
+float maxOut = radians(50);
+float minOut = radians(-50);
 long lastTimeTC = 0;
 float Tc = 0;
 int mode = 0;
@@ -28,6 +28,8 @@ float ruletable[49]= {};      // Tabel Rule base
 float Emf[9]  = {radians(-25),radians(-20), radians(-15), radians(-10), radians(0), radians(10), radians(15), radians(20), radians(25)};
 float DEmf[9] = {radians(-15),radians(-10), radians(-5), radians(-2), radians(0), radians(2), radians(5), radians(10), radians(15)};
 
+float GainKp = 1, GainKi = 1, GainKd = 1;
+
 float mf_error(float a, float b, float c)                     // mencari derajat keanggotaan membership function
 {
   if (error>=a&&error<b) {m_error = (error-a)/(b-a); }     // derajat keanggotaan region ke-1
@@ -43,7 +45,7 @@ float mf_derror(float a1, float b1, float c1)
 // ===================== MEMBER FUNCTION ==================== //
 void fuzzifikasi() {
   /* MF error fuzzifikasi */
-  Tab_error[7]= {};
+  Tab_error[7] = {};
   if(error>=Emf[0]&&error<=Emf[2]){
      mf_error(Emf[0], Emf[1], Emf[2]); Tab_error[0] = m_error;     // NB
     } else {Tab_error[0] = 0;}
@@ -67,12 +69,12 @@ void fuzzifikasi() {
     } else {Tab_error[6] = 0;}
 
   //Serial.print("MF error = "); Serial.print(Tab_error[0]);Serial.print("||");Serial.print(Tab_error[1]);Serial.print("||");Serial.print(Tab_error[2]);Serial.print("||");
-  //Serial.print(Tab_error[3]);Serial.print("||");Serial.print(Tab_error[4]);Serial.print("||");Serial.print(Tab_error[5]);
-  //Serial.println();
-
+  //Serial.print(Tab_error[3]);Serial.print("||");Serial.print(Tab_error[4]);Serial.print("||");Serial.print(Tab_error[5]);Serial.print("||");Serial.print(Tab_error[6]);
+  // Serial.println();
+  
+  Tab_derror[7] = {};
   /* MF delta error fuzzifikasi */
   if(derror>=DEmf[0]&&derror<=DEmf[2]){
-    Tab_derror[7] = {};
      mf_derror(DEmf[0], DEmf[1], DEmf[2]); Tab_derror[0] = m_derror;     // NB
      } else{Tab_derror[0] = 0;}
   if(derror>=DEmf[1]&&derror<=DEmf[3]){
@@ -90,7 +92,7 @@ void fuzzifikasi() {
   if(derror>=DEmf[5]&&derror<=DEmf[7]){
      mf_derror(DEmf[5], DEmf[6], DEmf[7]); Tab_derror[5] = m_derror;     // PM
     } else{Tab_derror[5] = 0;}
-  if(derror>=DEmf[6]&&derror<=DEmf[8]) {
+  if(derror>=DEmf[6]&&derror<=DEmf[8]){
     mf_derror(DEmf[6], DEmf[7], DEmf[8]); Tab_derror[6] = m_derror;      // PB
    } else{Tab_derror[6] = 0;}
 
@@ -102,15 +104,16 @@ void fuzzifikasi() {
 // ============== RULE EVALUATION TABLE ============= //
 void Ruleevaluation() {
   int k = 0;
-  ruletable[49] = {};
   for(int i=0; i<7;i++) {
     for(int j=0; j<7;j++) {
-      ruletable[k] = min(Tab_derror[i], Tab_error[j]);
+      ruletable[k] = min(Tab_error[i], Tab_derror[j]);
       k++;
     }
   }
+  
+/*  
   // debugging mung seko tabel 0.0 sampai 0.6
-  /*Serial.print("Rule tables = "); Serial.print(ruletable[0]);Serial.print("||");Serial.print(ruletable[1]);Serial.print("||");Serial.print(ruletable[2]);Serial.print("||");
+  Serial.print("Rule tables = "); Serial.print(ruletable[0]);Serial.print("||");Serial.print(ruletable[1]);Serial.print("||");Serial.print(ruletable[2]);Serial.print("||");
   Serial.print(ruletable[3]);Serial.print("||");Serial.print(ruletable[4]);Serial.print("||");Serial.print(ruletable[5]);Serial.print("||");Serial.print(ruletable[6]);
   Serial.println();
   Serial.print("              "); Serial.print(ruletable[7]);Serial.print("||");Serial.print(ruletable[8]);Serial.print("||");Serial.print(ruletable[9]);Serial.print("||");
@@ -130,8 +133,8 @@ void Ruleevaluation() {
   Serial.println();
   Serial.print("              "); Serial.print(ruletable[42]);Serial.print("||");Serial.print(ruletable[43]);Serial.print("||");Serial.print(ruletable[44]);Serial.print("||");
   Serial.print(ruletable[45]);Serial.print("||");Serial.print(ruletable[46]);Serial.print("||");Serial.print(ruletable[47]);Serial.print("||");Serial.print(ruletable[49]);
-  Serial.println();*/
-
+  Serial.println();
+*/
 }
 
 // =========== DEFUZZIFIKASI ============= //
@@ -143,9 +146,9 @@ void defuzzifikasi() {
   float Kievalxbobot1, Kievalxbobot2, Kievalxbobot3, Kievalxbobot4, Kievalxbobot5, Kievalxbobot6, Kievalxbobot7;
   float Kdevalxbobot1, Kdevalxbobot2, Kdevalxbobot3, Kdevalxbobot4, Kdevalxbobot5, Kdevalxbobot6, Kdevalxbobot7;
   
-  float dKp[7] = {-0.05, -0.02, -0.01, 0, 0.01, 0.02, 0.05};              // variabel output delta Kp
-  float dKi[7] = {-0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03};              // variabel output delta Ki
-  float dKd[7] = {-0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1};                // variabel output delta Kd
+  float dKp[7] = {-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3}; //{0,0,0,0,0,0,0};//              // variabel output delta Kp
+  float dKi[7] = {-0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03}; //{0,0,0,0,0,0,0};//              // variabel output delta Ki
+  float dKd[7] = {-0.05, -0.02, -0.01, 0, 0.01, 0.02, 0.05}; //{0,0,0,0,0,0,0};//              // variabel output delta Kd
 
   //Serial.print("memberdKp = ");Serial.print(dKp[0]);Serial.print("||");Serial.print(dKp[1]);Serial.print("||");Serial.print(dKp[2]);Serial.print("||");Serial.print(dKp[3]);
   //Serial.print("||");Serial.print(dKp[4]);Serial.print("||");Serial.print(dKp[5]);Serial.print("||");Serial.print(dKp[6]);
@@ -166,7 +169,7 @@ void defuzzifikasi() {
     Kpeval += ruletable[i];
     }
   }
-  Kpf = totalKpevalxbobot/Kpeval;
+  Kpf = (totalKpevalxbobot/Kpeval)*GainKp;
   //Serial.print("Debug Kpeval = ");Serial.print(Kpeval);
   //Serial.println();
   //Serial.print("Debug Kpf = ");Serial.print(Kpf);
@@ -187,7 +190,7 @@ void defuzzifikasi() {
     Kieval += ruletable[i];
     }
   }
-  Kif = totalKievalxbobot/Kieval;
+  Kif = (totalKievalxbobot/Kieval)*GainKi;
   //Serial.print("Debug Kieval = ");Serial.print(Kieval);
   //Serial.println();
   //Serial.print("Debug Kif = ");Serial.print(Kif);
@@ -208,7 +211,7 @@ void defuzzifikasi() {
     Kdeval += ruletable[i];
     }
   }
-  Kdf = totalKdevalxbobot/Kdeval;
+  Kdf = (totalKdevalxbobot/Kdeval)*GainKd;
   //Serial.print("Debug Kdeval = ");Serial.print(Kdeval);
   //Serial.println();
   //Serial.print("totalKdevalxbobot = ");Serial.print(totalKdevalxbobot);
@@ -217,6 +220,7 @@ void defuzzifikasi() {
   //Serial.println();
   //Serial.print("Debugging Kpf, Kif, Kdf = "); Serial.print(Kpf); Serial.print("||");Serial.print(Kif);Serial.print("||");Serial.print(Kdf);
   //Serial.println();
+
 }
 
 void constPID(float vKp,float vKi,float vKd,int vmode) {
@@ -238,41 +242,42 @@ void timesampling(int ts) {
   Tc = ts;
 }
 
-float fuzzyInput() {
-  unsigned long counter = micros();
-  if(counter - previousMillis >= 1000) {
-  error  = sp - pv;
+void calcFuzzyPID_Roll(float readsensor, float inputvalue, float Kp, float Ki, float Kd, float tsampling, int modePID) {
+  
+  Sensorvalue(readsensor);
+  setpoint(inputvalue);
+  
+  // calc error and delta error fuzzyinput()
+    error  = sp - pv;
   if(error >= MAXerror){
     error = MAXerror;
   } else if (error <= MINerror){
     error = MINerror;
   }
+  unsigned long counter = micros();
+  if(counter - previousMillis >= 3000000) {
+  previouserror  = error;
+  previousMillis = counter;
+  }
+
   derror = error - previouserror;
-  previouserror = error;
-  
   if(derror >= MAXderror){
     derror = MAXderror;
   } else if (derror <= MINderror){
     derror = MINderror;
   }
-  previousMillis = counter;
-  }
-  //Serial.print("error = "); Serial.print(error);Serial.print("||"); Serial.print("derror = "); Serial.print(derror);
-  //Serial.println();
-  return derror, error;
-}
 
-void calcFuzzyPID_Roll(float readsensor, float inputvalue, float Kp, float Ki, float Kd, float tsampling, int modePID) {
+//  Serial.print("DEbug error! = "); Serial.print(error); Serial.print("||"); Serial.print(derror);
+//  Serial.println();
   
-  Sensorvalue(readsensor);
-  setpoint(inputvalue);
-  fuzzyInput();
+  // fuzzy logic controller
   fuzzifikasi();
   Ruleevaluation();
   defuzzifikasi();
   constPID(Kp,Ki,Kd,modePID);
   timesampling(tsampling);
-  
+
+  // PID controller
   if(first == 1) {
     first = 0;
     derivativeE = error;
@@ -288,7 +293,7 @@ void calcFuzzyPID_Roll(float readsensor, float inputvalue, float Kp, float Ki, f
     outP = (consKp + Kpf) * error;
 
     // Integral calculation
-    integralE += error;
+    integralE = error;
     outI = (consKi + Kif) * integralE * tc;
 
     // Derivative calculation
@@ -298,8 +303,12 @@ void calcFuzzyPID_Roll(float readsensor, float inputvalue, float Kp, float Ki, f
 
     // delta U output
     dU = outP + outI + outD;
-    //Serial.print("debug output P,I,D = "); Serial.print(dU); //Serial.print(outP);Serial.print("||");Serial.print(outI);Serial.print("||");Serial.print(outD);
-    //Serial.println();
+//    Serial.print("debug output PID = "); 
+//    Serial.print(dU); Serial.print(","); 
+//    Serial.print("|| Debug [P],[I],[D]: "); 
+//    Serial.print(outP);Serial.print(",");Serial.print(",");Serial.print(outD);
+//    Serial.print(outI);
+//    Serial.println();
 
     // case mod
     if(mode==1) {
@@ -316,8 +325,9 @@ void calcFuzzyPID_Roll(float readsensor, float inputvalue, float Kp, float Ki, f
         integralE -= error;
       }
     }
+//    Serial.print("Output PID = "); Serial.print(outPID_roll);
+//    Serial.print("Integral = "); Serial.print(integralE);
+//    Serial.println();
     return outPID_roll;
-    //Serial.print("Output PID = "); Serial.print(outPID);
-    //Serial.println();
   }
 }
